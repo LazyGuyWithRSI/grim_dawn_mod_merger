@@ -19,6 +19,10 @@ Simply download the [latest release](https://github.com/LazyGuyWithRSI/grim_dawn
 *to be updated*
 
 ---
+## Special Thanks
+To Ugnius Soraka for the one-of-a-kind [arzedit](https://gitlab.com/QuasiMod/arzedit), this project would not have been possible without it.
+
+---
 ## Licensing
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
