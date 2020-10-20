@@ -2,7 +2,7 @@
 
 isn't it lame that Grim Dawn only allows you to load one mod at a time? Now you can play all your favorite mods at the same time!
 
-*insert image here*
+![screenshot](https://i.imgur.com/8aG0Yh8.png)
 
 ###
 ---
