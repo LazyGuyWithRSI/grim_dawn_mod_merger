@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:GrimDawnModMerger"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="MainWindow" Height="620" Width="720">
+        Title="Grim Dawn Mod Merger" Height="620" Width="720" ResizeMode="NoResize" >
     <Grid Margin="0,0,0,-6">
         <Grid.RowDefinitions>
             <RowDefinition Height="50" />
