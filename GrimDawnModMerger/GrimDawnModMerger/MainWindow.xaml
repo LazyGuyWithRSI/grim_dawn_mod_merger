@@ -39,13 +39,11 @@
         <TextBlock TextAlignment="Center" VerticalAlignment="Center">Game Path:</TextBlock>
         <TextBox Name="txtBoxGamePath" TextChanged="txtBoxGamePath_TextChanged"
                  MaxLines="1"
-                 Margin="0,12,12,12" Grid.Column="1" Grid.ColumnSpan="2"></TextBox>
-        <Button Name="btnSelectPath" Margin="10" Grid.Column="3" Grid.Row="0" Click="btnSelectPath_Click">Select Path</Button>
+                 Margin="0,12,12,12" Grid.Column="1" Grid.ColumnSpan="3"></TextBox>
+        <Button Name="btnSelectPath" Margin="10" Grid.Column="4" Grid.Row="0" Click="btnSelectPath_Click">Select Path</Button>
         
-        <Button Name="btnMerge" Click="btnMerge_Click" Margin="10" Grid.Column="4" Grid.Row="3">merge</Button>
+        <Button Name="btnMerge" Click="btnMerge_Click" Margin="10" Grid.Column="4" Grid.Row="3" Grid.ColumnSpan="2">merge</Button>
 
-        <Button Name="btnTest" Click="btnTest_Click" Grid.Row="4" Grid.Column="6">test</Button>
-        
         <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Grid.RowSpan="4">
             <Grid.RowDefinitions>
                 <RowDefinition Height="30" />
