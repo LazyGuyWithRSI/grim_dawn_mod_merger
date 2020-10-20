@@ -11,6 +11,8 @@ isn't it lame that Grim Dawn only allows you to load one mod at a time? Now you 
 Simply download the [latest release](https://github.com/LazyGuyWithRSI/grim_dawn_mod_merger/releases) to start merging. All you need to do is point it at your Grim Dawn install folder and have some mods in your 'mods' folder.
 
 
+Once you merge some mods, just load up your new merged mod in Grim Dawn like you would any other mod.
+
 ***Important:*** This is a very new tool. There will be bugs. Please report any issues you have so they can be fixed ASAP :)
 
 ---
