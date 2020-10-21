@@ -15,7 +15,7 @@ namespace GrimDawnModMerger
         public string GAME_DIR { get; set; }
 
         private CommandLine cmdLine;
-        private Thread cmdThread;
+        private Thread cmdThread; // TODO why is the merger handling the threading...
         private EventHandler<UILogMessageEventArgs> UILogMessageCallback;
 
         private string currentMod; // !!DEBUG!!
@@ -72,28 +72,20 @@ namespace GrimDawnModMerger
                 if (file.Extension.Equals(".arc"))
                 {
                     ExtractArc(file, combinedDir + @"\source", cmdLine);
-                    //Directory.CreateDirectory(combinedDir + @"\source");// + @file.Name.Substring(0, file.Name.Length - 4));
-                    //cmdLine.messageQueue.Add(new Message { Command = "Extract", Args = new string[] { file.FullName, combinedDir + @"\source" } });
 
                     cmdLine.messageQueue.Add(new Message { Command = "Pack", Args = new string[] { combinedDir + @"\source\" + @file.Name.Substring(0, file.Name.Length - 4), @file.Name.Substring(0, file.Name.Length - 4), combinedDir + @"\resources\" + file.Name } });
                 }
             }
+
             dir = new DirectoryInfo(modDir + @"\database");
 
             foreach (FileInfo file in dir.GetFiles())
             {
                 if (file.Extension.Equals(".arz"))
-                {
                     ExtractArz(file, combinedDir + @"\database", cmdLine);
-                    //Directory.CreateDirectory(combinedDir + @"\database");// + @file.Name.Substring(0, file.Name.Length - 4));
-                    //cmdLine.messageQueue.Add(new Message { Command = "ExtractDatabase", Args = new string[] { file.FullName, combinedDir + @"\database" } });
-                }
+
                 else if (file.Extension.Equals(".arc"))
-                {
                     ExtractArc(file, combinedDir + @"\database", cmdLine);
-                    //Directory.CreateDirectory(combinedDir + @"\database");// + @file.Name.Substring(0, file.Name.Length - 4));
-                    //cmdLine.messageQueue.Add(new Message { Command = "Extract", Args = new string[] { file.FullName, combinedDir + @"\database" } });
-                }
             }
         }
 
