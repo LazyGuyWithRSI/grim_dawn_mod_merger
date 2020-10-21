@@ -126,32 +126,35 @@ namespace GrimDawnModMerger
 
         public void UILogMessageHandler(object o, UILogMessageEventArgs e)
         {
-            Dispatcher.Invoke(() =>
+            try // exception thrown when exiting, it is a problem with the cmd line thread exiting. TODO fix this
             {
-                if (e.Message.Contains("Parsing")) // just for fun, and a bit of clarity for the user
+                Dispatcher.Invoke(() =>
+                {
+                    if (e.Message.Contains("Parsing")) // just for fun, and a bit of clarity for the user
                     e.Message += "\nPacking Database...";
 
-                if (e.Message.Contains("Merge Complete"))
-                {
-                    btnMerge.Content = "Merge";
-                    btnMerge.IsEnabled = true;
-                }
-                if (txtBoxOutput.LineCount > 300)
-                {
-                    var lines = (from item in txtBoxOutput.Text.Split('\n') select item.Trim());
-                    lines = lines.Skip(200);
-                    txtBoxOutput.Text = string.Join(Environment.NewLine, lines.ToArray());
-                }
+                    if (e.Message.Contains("Merge Complete"))
+                    {
+                        btnMerge.Content = "Merge";
+                        btnMerge.IsEnabled = true;
+                    }
+                    if (txtBoxOutput.LineCount > 300)
+                    {
+                        var lines = (from item in txtBoxOutput.Text.Split('\n') select item.Trim());
+                        lines = lines.Skip(200);
+                        txtBoxOutput.Text = string.Join(Environment.NewLine, lines.ToArray());
+                    }
 
-                txtBoxOutput.AppendText("\n" + e.Message);
-                txtBoxOutput.ScrollToEnd();
+                    txtBoxOutput.AppendText("\n" + e.Message);
+                    txtBoxOutput.ScrollToEnd();
                 //txtBoxOutput.Text += "\n" + e.Message;
             });
+            } catch (Exception ex) { Trace.WriteLine(ex); }
         }
 
         private void Window_Closing (object sender, System.ComponentModel.CancelEventArgs e)
         {
-
+            merger.Closing();
         }
     }
 

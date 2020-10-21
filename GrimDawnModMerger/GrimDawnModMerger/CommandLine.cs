@@ -17,11 +17,12 @@ namespace GrimDawnModMerger
         public event EventHandler<UILogMessageEventArgs> UILogMessageEvent;
 
         private Process cmd;
+        private Thread cmdThread;
         private string gameDir;
-        private bool threadRunning = false;
+        private bool threadRunning = false; // is this still needed?
 
         private HashSet<string> files;
-        private int overwrittenFiles;
+        private int overwrittenFiles; // sort of placeholder
 
         public CommandLine(string gameDir, EventHandler<UILogMessageEventArgs> eventHandler)
         {
@@ -30,6 +31,32 @@ namespace GrimDawnModMerger
             UILogMessageEvent += eventHandler;
             files = new HashSet<string>();
             overwrittenFiles = 0;
+        }
+
+        public void Start()
+        {
+            overwrittenFiles = 0;
+            cmdThread = new Thread(ThreadLoop);
+            cmdThread.IsBackground = true;
+            cmdThread.Start();
+        }
+
+        public void Kill(bool gracefully = true) // somewhat tested. None-graceful seems to work...
+        {
+            if (gracefully)
+                messageQueue.Add(new Message { Command = "Close", Args = null });
+            else
+            {
+                cmd.Kill();
+                Trace.WriteLine("cmd is kill");
+            }
+            
+            // kill archivetool if it is still running
+            foreach (Process proc in Process.GetProcessesByName("ArchiveTool"))
+            {
+                Trace.WriteLine("Killing archivetool...");
+                proc.Kill();
+            }
         }
 
         public void ThreadLoop()
@@ -44,10 +71,9 @@ namespace GrimDawnModMerger
             cmd.Start();
 
             cmd.BeginOutputReadLine();
-            int skippedCount = 0;
+            //int skippedCount = 0;
             cmd.OutputDataReceived += (sender, args) =>
             {
-                
                 if (args.Data == null)
                     return;
                 // message culling test, looks a bit confusing tbh
@@ -150,12 +176,6 @@ namespace GrimDawnModMerger
                 SendToUI("\n\nWARNING: Overwrote " + overwrittenFiles + " files");
             SendToUI("\n<---- Merge Complete ---->");
             Trace.WriteLine("cmd closed");
-        }
-
-        public void Kill()
-        {
-            cmd.Kill();
-            Trace.WriteLine("cmd is kill");
         }
 
         private void SendToUI(string message)

@@ -15,7 +15,7 @@ namespace GrimDawnModMerger
         public string GAME_DIR { get; set; }
 
         private CommandLine cmdLine;
-        private Thread cmdThread; // TODO why is the merger handling the threading...
+        //private Thread cmdThread; // TODO why is the merger handling the threading...
         private EventHandler<UILogMessageEventArgs> UILogMessageCallback;
 
         private string currentMod; // !!DEBUG!!
@@ -27,12 +27,13 @@ namespace GrimDawnModMerger
 
         public void Closing()
         {
-            cmdLine.Kill();
+            cmdLine.Kill(gracefully: false);
         }
 
         public void Merge(string mergeName, List<string> modsToMerge)
         {
-            StartCommandLine();
+            cmdLine = new CommandLine(GAME_DIR, UILogMessageCallback);
+            cmdLine.Start();
 
             // for testing, wipe old combined dir
             string combinedDir = GAME_DIR + @"\mods\" + mergeName;
@@ -57,7 +58,7 @@ namespace GrimDawnModMerger
             // build .arz
             cmdLine.messageQueue.Add(new Message { Command = "BuildDatabase", Args = new string[] { combinedDir, GAME_DIR } });
             //cmdLine.messageQueue.Add(new Message { Command = "Close", Args = null });
-            KillCommandLine();
+            cmdLine.Kill();
         }
 
         private void AddMod(string modDir, string combinedDir)
@@ -99,22 +100,6 @@ namespace GrimDawnModMerger
         {
             Directory.CreateDirectory(destination);// + @file.Name.Substring(0, file.Name.Length - 4));
             cmdLine.messageQueue.Add(new Message { Command = "ExtractDatabase", Args = new string[] { file.FullName, destination } });
-        }
-
-        private void StartCommandLine()
-        {
-            cmdLine = new CommandLine(GAME_DIR, UILogMessageCallback);
-            cmdThread = new Thread(cmdLine.ThreadLoop);
-            cmdThread.IsBackground = true;
-            cmdThread.Start();
-        }
-
-        private void KillCommandLine(bool gracefully = true)
-        {
-            if (gracefully)
-                cmdLine.messageQueue.Add(new Message { Command = "Close", Args = null });
-            else
-                cmdThread.Abort();
         }
 
         private void SetupModDirectory(string combinedDir) // TODO move this out of merger
