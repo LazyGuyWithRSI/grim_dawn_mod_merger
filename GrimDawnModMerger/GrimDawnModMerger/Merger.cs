@@ -15,6 +15,7 @@ namespace GrimDawnModMerger
         public string GAME_DIR { get; set; }
 
         private CommandLine cmdLine;
+        private Thread cmdThread;
         private EventHandler<UILogMessageEventArgs> UILogMessageCallback;
 
         private string currentMod; // !!DEBUG!!
@@ -31,12 +32,8 @@ namespace GrimDawnModMerger
 
         public void Merge(string mergeName, List<string> modsToMerge)
         {
-            //if (cmd != null)
-                //cmd.Close();
-            cmdLine = new CommandLine(GAME_DIR, UILogMessageCallback);
-            Thread cmdThread = new Thread(cmdLine.ThreadLoop);
-            cmdThread.IsBackground = true;
-            cmdThread.Start();
+            StartCommandLine();
+
             // for testing, wipe old combined dir
             string combinedDir = GAME_DIR + @"\mods\" + mergeName;
 
@@ -47,69 +44,98 @@ namespace GrimDawnModMerger
                 proc.Kill();
             }
 
+            SetupModDirectory(combinedDir);
+
+            // merge mods
+            foreach (string mod in modsToMerge)
+            {
+                currentMod = mod;
+                string modDir = GAME_DIR + @"\mods\" + @mod;
+                AddMod(modDir, combinedDir);
+            }
+
+            // build .arz
+            cmdLine.messageQueue.Add(new Message { Command = "BuildDatabase", Args = new string[] { combinedDir, GAME_DIR } });
+            //cmdLine.messageQueue.Add(new Message { Command = "Close", Args = null });
+            KillCommandLine();
+        }
+
+        private void AddMod(string modDir, string combinedDir)
+        {
+            // raw copy any resources
+            DirectoryCopy(modDir, combinedDir, true);
+            DirectoryInfo dir = new DirectoryInfo(modDir + @"\resources");
+
+            // decompile any .arc or .arz into their respective folders
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                if (file.Extension.Equals(".arc"))
+                {
+                    ExtractArc(file, combinedDir + @"\source", cmdLine);
+                    //Directory.CreateDirectory(combinedDir + @"\source");// + @file.Name.Substring(0, file.Name.Length - 4));
+                    //cmdLine.messageQueue.Add(new Message { Command = "Extract", Args = new string[] { file.FullName, combinedDir + @"\source" } });
+
+                    cmdLine.messageQueue.Add(new Message { Command = "Pack", Args = new string[] { combinedDir + @"\source\" + @file.Name.Substring(0, file.Name.Length - 4), @file.Name.Substring(0, file.Name.Length - 4), combinedDir + @"\resources\" + file.Name } });
+                }
+            }
+            dir = new DirectoryInfo(modDir + @"\database");
+
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                if (file.Extension.Equals(".arz"))
+                {
+                    ExtractArz(file, combinedDir + @"\database", cmdLine);
+                    //Directory.CreateDirectory(combinedDir + @"\database");// + @file.Name.Substring(0, file.Name.Length - 4));
+                    //cmdLine.messageQueue.Add(new Message { Command = "ExtractDatabase", Args = new string[] { file.FullName, combinedDir + @"\database" } });
+                }
+                else if (file.Extension.Equals(".arc"))
+                {
+                    ExtractArc(file, combinedDir + @"\database", cmdLine);
+                    //Directory.CreateDirectory(combinedDir + @"\database");// + @file.Name.Substring(0, file.Name.Length - 4));
+                    //cmdLine.messageQueue.Add(new Message { Command = "Extract", Args = new string[] { file.FullName, combinedDir + @"\database" } });
+                }
+            }
+        }
+
+        private void ExtractArc(FileInfo file, string destination, CommandLine cmdLine) // TODO move this out of merger
+        {
+            Directory.CreateDirectory(destination);// + @file.Name.Substring(0, file.Name.Length - 4));
+            cmdLine.messageQueue.Add(new Message { Command = "Extract", Args = new string[] { file.FullName, destination } });
+        }
+
+        private void ExtractArz (FileInfo file, string destination, CommandLine cmdLine) // TODO move this out of merger
+        {
+            Directory.CreateDirectory(destination);// + @file.Name.Substring(0, file.Name.Length - 4));
+            cmdLine.messageQueue.Add(new Message { Command = "ExtractDatabase", Args = new string[] { file.FullName, destination } });
+        }
+
+        private void StartCommandLine()
+        {
+            cmdLine = new CommandLine(GAME_DIR, UILogMessageCallback);
+            cmdThread = new Thread(cmdLine.ThreadLoop);
+            cmdThread.IsBackground = true;
+            cmdThread.Start();
+        }
+
+        private void KillCommandLine(bool gracefully = true)
+        {
+            if (gracefully)
+                cmdLine.messageQueue.Add(new Message { Command = "Close", Args = null });
+            else
+                cmdThread.Abort();
+        }
+
+        private void SetupModDirectory(string combinedDir) // TODO move this out of merger
+        {
             if (Directory.Exists(combinedDir))
                 Directory.Delete(combinedDir, true);
 
             Directory.CreateDirectory(combinedDir);
             Directory.CreateDirectory(combinedDir + @"\source");
             Directory.CreateDirectory(combinedDir + @"\database\templates");
-
-            bool templatesPresent = false;
-
-            foreach (string mod in modsToMerge)
-            {
-                currentMod = mod;
-                string modDir = GAME_DIR + @"\mods\" + @mod;
-                // raw copy any resources
-                DirectoryCopy(modDir, combinedDir, true);
-                DirectoryInfo dir = new DirectoryInfo(modDir + @"\resources");
-
-                // decompile any .arc or .arz into their respective folders
-                foreach (FileInfo file in dir.GetFiles())
-                {
-                    if (file.Extension.Equals(".arc"))
-                    {
-                        //cmd = new CommandLine(GAME_DIR);
-                        Directory.CreateDirectory(combinedDir + @"\source");// + @file.Name.Substring(0, file.Name.Length - 4));
-                        cmdLine.messageQueue.Add(new Message { Command = "Extract", Args = new string[] { file.FullName, combinedDir + @"\source" } });
-                        //cmd.Extract(file.FullName, combinedDir + @"\source");// + @file.Name.Substring(0, file.Name.Length - 4));
-
-                        cmdLine.messageQueue.Add(new Message { Command = "Pack", Args = new string[] { combinedDir + @"\source\" + @file.Name.Substring(0, file.Name.Length - 4), @file.Name.Substring(0, file.Name.Length - 4), combinedDir + @"\resources\" + file.Name } });
-                        //cmd.Pack(combinedDir + @"\source\" + @file.Name.Substring(0, file.Name.Length - 4), @file.Name.Substring(0, file.Name.Length - 4), combinedDir + @"\resources\" + file.Name);
-                        //cmd.Close();
-                    }
-                }
-                dir = new DirectoryInfo(modDir + @"\database");
-
-                foreach (FileInfo file in dir.GetFiles())
-                {
-                    if (file.Extension.Equals(".arz"))
-                    {
-                        //cmd = new CommandLine(GAME_DIR);
-                        Directory.CreateDirectory(combinedDir + @"\database");// + @file.Name.Substring(0, file.Name.Length - 4));
-                        cmdLine.messageQueue.Add(new Message { Command = "ExtractDatabase", Args = new string[] { file.FullName, combinedDir + @"\database" } });
-
-                        //cmd.ExtractDatabase(file.FullName, combinedDir + @"\database");// + @file.Name.Substring(0, file.Name.Length - 4));
-                        //cmd.Close();
-                    }
-                    else if (file.Extension.Equals(".arc"))
-                    {
-
-                        Directory.CreateDirectory(combinedDir + @"\database");// + @file.Name.Substring(0, file.Name.Length - 4));
-                        cmdLine.messageQueue.Add(new Message { Command = "Extract", Args = new string[] { file.FullName, combinedDir + @"\database" } });
-                        //cmd.Extract(file.FullName, combinedDir + @"\database");// + @file.Name.Substring(0, file.Name.Length - 4));
-                        templatesPresent = true;
-                    }
-                }
-            }
-            cmdLine.messageQueue.Add(new Message { Command = "BuildDatabase", Args = new string[] { combinedDir, GAME_DIR, templatesPresent ? "1" : "0" } });
-            //cmd.BuildDatabase(combinedDir, GAME_DIR, templatesPresent);
-            cmdLine.messageQueue.Add(new Message { Command = "Close", Args = null });
-            //cmd.Close();
         }
 
-
-        private void DirectoryCopy (string sourceDirName, string destDirName, bool copySubDirs) // TODO maybe own class?
+        private void DirectoryCopy (string sourceDirName, string destDirName, bool copySubDirs)  // TODO move this out of merger
         {
             // Get the subdirectories for the specified directory.
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
