@@ -109,10 +109,7 @@ namespace GrimDawnModMerger
                         break;
 
                     case "BuildDatabase":
-                        bool lookForTemplates = false;
-                        if (message.Args[2].Equals("1")) // eeeeh, gross
-                            lookForTemplates = true;
-                        BuildDatabase(message.Args[0], message.Args[1], lookForTemplates);
+                        BuildDatabase(message.Args[0], message.Args[1]);
                         break;
                 }
             }
@@ -138,12 +135,10 @@ namespace GrimDawnModMerger
             cmd.StandardInput.Flush();
         }
 
-        public void BuildDatabase(string modDir, string gameDir, bool lookForTemplates = false)
+        public void BuildDatabase(string modDir, string gameDir)
         {
-            if (lookForTemplates)
-                cmd.StandardInput.WriteLine(Directory.GetCurrentDirectory() + "\\arzedit build \"" + modDir + "\" \"" + modDir + "\" -g \"" + gameDir + "\" -t \"" + modDir + "\\database\\templates\" -A -R");
-            else
-                cmd.StandardInput.WriteLine(Directory.GetCurrentDirectory() + "\\arzedit build \"" + modDir + "\" \"" + modDir + "\" -g \"" + gameDir + "\" -A -R");
+            cmd.StandardInput.WriteLine(Directory.GetCurrentDirectory() + "\\arzedit build \"" + modDir + "\" \"" + modDir + "\" -g \"" + gameDir + "\" -t \"" + modDir + "\\database\\templates\" -A -R");
+
             cmd.StandardInput.Flush();
         }
 
