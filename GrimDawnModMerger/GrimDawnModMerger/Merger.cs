@@ -27,7 +27,8 @@ namespace GrimDawnModMerger
 
         public void Closing()
         {
-            cmdLine.Kill(gracefully: false);
+            if (cmdLine != null)
+                cmdLine.Kill(gracefully: false);
         }
 
         public void Merge(string mergeName, List<string> modsToMerge)
