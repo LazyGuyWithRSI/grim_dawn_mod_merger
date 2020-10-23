@@ -10,9 +10,6 @@ using System.Windows.Controls;
 
 namespace GrimDawnModMerger
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public ObservableCollection<ModListItem> modList { get; set; }
@@ -23,7 +20,6 @@ namespace GrimDawnModMerger
             InitializeComponent();
 
             modList = new ObservableCollection<ModListItem>();
-            //modList.Add(new ModListItem("Test mod 1"));
             this.DataContext = this;
             merger = new Merger(UILogMessageHandler);
 
@@ -34,30 +30,12 @@ namespace GrimDawnModMerger
 
         private void btnUp_Click (object sender, RoutedEventArgs e)
         {
-            ModListItem item = null;
-            int index = -1;
-
-            if (listBoxMods.SelectedItems.Count != 1) return;
-            item = (ModListItem)listBoxMods.SelectedItems[0];
-            index = modList.IndexOf(item);
-            if (index > 0)
-            {
-                modList.Move(index, index - 1);
-            }
+            MoveModInList(-1);
         }
 
         private void btnDown_Click (object sender, RoutedEventArgs e)
         {
-            ModListItem item = null;
-            int index = -1;
-
-            if (listBoxMods.SelectedItems.Count != 1) return;
-            item = (ModListItem)listBoxMods.SelectedItems[0];
-            index = modList.IndexOf(item);
-            if (index < modList.Count - 1)
-            {
-                modList.Move(index, index + 1);
-            }
+            MoveModInList(1);
         }
 
         private void btnSelectPath_Click (object sender, RoutedEventArgs e)
@@ -96,6 +74,7 @@ namespace GrimDawnModMerger
         private void txtBoxGamePath_TextChanged (object sender, TextChangedEventArgs e)
         {
             merger.GAME_DIR = @txtBoxGamePath.Text;
+
             // scan new directory for mods
             // TODO in future, save last configuration (isselected and position), as well as what mods were last merged
             DirectoryInfo dirInfo = new DirectoryInfo(merger.GAME_DIR + @"\mods");
@@ -116,7 +95,7 @@ namespace GrimDawnModMerger
 
         public void UILogMessageHandler(object o, UILogMessageEventArgs e)
         {
-            try // exception thrown when exiting, it is a problem with the cmd line thread exiting. TODO fix this
+            try // exception thrown when exiting, it is a problem with the cmd line thread exiting. TODO look into this
             {
                 Dispatcher.Invoke(() =>
                 {
@@ -146,6 +125,23 @@ namespace GrimDawnModMerger
         {
             merger.Closing();
         }
+
+        private void MoveModInList (int delta)
+        {
+            ModListItem item;
+            int index;
+
+            if (listBoxMods.SelectedItems.Count != 1)
+                return;
+
+            item = (ModListItem)listBoxMods.SelectedItems[0];
+            index = modList.IndexOf(item);
+            if (index > 0)
+            {
+                modList.Move(index, index + delta);
+            }
+        }
+
     }
 
     public class ModListItem
